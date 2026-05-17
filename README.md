@@ -6,11 +6,7 @@ A fully local, voice-controlled smart home assistant that runs on macOS. Speak c
 
 ## 🎬 Demo
 
-https://github.com/user-attachments/assets/voice_video.mp4
-
-> **Note:** Replace the video link above after pushing — GitHub will generate a new asset URL when you drag-drop `voice_video.mp4` into your repo's README editor.
-
-<video src="voice_video.mp4" controls width="100%"></video>
+https://github.com/basudevghadai1999/ai_voice_assistant/blob/main/voice_video.mp4
 
 ---
 
