@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+tinytuya
+python-dotenv
+httpx
+python-multipart
+sounddevice
+webrtcvad-wheels
+numpy
+scipy
+duckduckgo-search
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
