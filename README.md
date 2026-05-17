@@ -1,6 +1,6 @@
 # 🎙️ Voice Home Control — "Dev"
 
-A fully local, voice-controlled smart home assistant that runs on macOS. Speak commands in **English or Hindi** to control IoT devices, play music, set reminders, take notes, search the web, and have casual conversations — all powered by **Ollama (Gemma 4 26B)** running locally on your machine.
+A voice-controlled smart home assistant that runs on macOS. Speak commands in **English or Hindi** to control IoT devices, play music, set reminders, take notes, search the web, and have casual conversations — all powered by **Google Gemini API** (cloud LLM, no local GPU required).
 
 ---
 
@@ -20,7 +20,7 @@ https://github.com/basudevghadai1999/ai_voice_assistant/blob/main/voice_video.mp
 | 🎵 **Music Playback** | Play any song from YouTube via `yt-dlp`, control Spotify/Apple Music |
 | 📅 **Calendar & Reminders** | Add events and check your schedule via Google Calendar API |
 | 📝 **Notes** | Save and search voice notes (stored locally as JSON) |
-| 🔍 **Web Search** | Answer real-time questions using DuckDuckGo + LLM summarization |
+| 🔍 **Web Search** | Answer real-time questions using DuckDuckGo + Gemini summarization |
 | 🌤️ **Weather** | Fetch live weather from wttr.in |
 | 💬 **Chat** | Casual conversation with personality |
 | 🗣️ **Bilingual** | Understands and responds in English and Hindi |
@@ -43,7 +43,7 @@ https://github.com/basudevghadai1999/ai_voice_assistant/blob/main/voice_video.mp
 │                Backend (FastAPI + Uvicorn)                │
 │              http://localhost:8000                        │
 │                                                          │
-│  POST /voice ──► STT (Sarvam) ──► Intent (Gemma 4 26B)  │
+│  POST /voice ──► STT (Sarvam) ──► Intent (Gemini API)   │
 │                       │                  │               │
 │                       ▼                  ▼               │
 │              ┌────────────────────────────────────┐      │
@@ -52,8 +52,8 @@ https://github.com/basudevghadai1999/ai_voice_assistant/blob/main/voice_video.mp
 │              │  ├─ music    → yt-dlp / Spotify    │      │
 │              │  ├─ reminder → Google Calendar      │      │
 │              │  ├─ note     → Local JSON storage   │      │
-│              │  ├─ query    → DuckDuckGo + Gemma   │      │
-│              │  ├─ chat     → Gemma conversational  │      │
+│              │  ├─ query    → DuckDuckGo + Gemini  │      │
+│              │  ├─ chat     → Gemini conversational │      │
 │              │  └─ weather  → wttr.in API          │      │
 │              └────────────────────────────────────┘      │
 │                       │                                  │
@@ -69,9 +69,9 @@ https://github.com/basudevghadai1999/ai_voice_assistant/blob/main/voice_video.mp
 └──────────────────────────────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────┐
-│              Ollama (Local LLM)                          │
-│              http://localhost:11434                       │
-│              Model: gemma4:26b (Q4_K_M, ~17GB)           │
+│              Google Gemini API (Cloud LLM)               │
+│              Model: gemini-2.0-flash (default)           │
+│              https://generativelanguage.googleapis.com   │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -80,18 +80,19 @@ https://github.com/basudevghadai1999/ai_voice_assistant/blob/main/voice_video.mp
 ## 📂 Project Structure
 
 ```
-voice-home-control/
+ai_voice_assistant/
 ├── server.py                  # FastAPI backend — main entry point
 ├── voice_client.py            # CLI mic listener with VAD
 ├── config.py                  # Environment config loader
 ├── setup_google_calendar.py   # One-time Google Calendar OAuth setup
+├── .env                       # Your secrets (never commit this)
 ├── .env.example               # Environment template (copy to .env)
 ├── requirements.txt           # Python dependencies
 ├── voice_video.mp4            # Demo video
 │
 ├── services/
-│   ├── gemma_intent.py        # Intent classification via Ollama (Gemma 4)
-│   ├── search.py              # Web search + Q&A via Ollama
+│   ├── gemma_intent.py        # Intent classification via Google Gemini API
+│   ├── search.py              # Web search + Q&A via Google Gemini API
 │   ├── sarvam.py              # Speech-to-Text & Text-to-Speech (Sarvam AI)
 │   ├── tuya_control.py        # Tuya smart plug control (local network)
 │   ├── calendar_service.py    # Google Calendar integration
@@ -119,11 +120,12 @@ voice-home-control/
 |---|---|
 | **Python 3.10+** | `brew install python` |
 | **Node.js 18+** | `brew install node` |
-| **Ollama** | `brew install ollama` |
-| **Gemma 4 26B model** | `ollama pull gemma4:26b` |
 | **yt-dlp** (for music) | `brew install yt-dlp` |
 | **Sarvam AI API key** | Sign up at [sarvam.ai](https://www.sarvam.ai/) |
+| **Google Gemini API key** | Get one free at [aistudio.google.com](https://aistudio.google.com/app/apikey) |
 | **Tuya smart plug** (optional) | Need device ID, local key, and IP address |
+
+> ✅ **No local GPU or Ollama required.** Gemini runs in the cloud — works on any Mac.
 
 ---
 
@@ -133,8 +135,8 @@ voice-home-control/
 
 ```bash
 # Clone the repository
-git clone https://github.com/basudevghadai/voice-home-control.git
-cd voice-home-control
+git clone https://github.com/basudevghadai1999/ai_voice_assistant.git
+cd ai_voice_assistant
 
 # Install Python dependencies
 pip3 install -r requirements.txt
@@ -158,9 +160,10 @@ Edit `.env` with your actual values:
 # Sarvam AI (Speech-to-Text & Text-to-Speech)
 SARVAM_API_KEY=your_sarvam_api_key_here
 
-# Ollama (Local LLM)
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=gemma4:26b
+# Google Gemini API (Intent parsing & Answering)
+# Get your free key at https://aistudio.google.com/app/apikey
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-2.0-flash
 
 # Tuya Smart Plug (optional — skip if you don't have one)
 TUYA_DEVICE_ID=your_device_id
@@ -169,22 +172,12 @@ TUYA_LOCAL_KEY=your_local_key
 TUYA_VERSION=3.5
 ```
 
-### Step 3 — Start Ollama
+> 💡 **Gemini model options:**
+> - `gemini-2.0-flash` — fast, cheap, great for voice assistants (recommended)
+> - `gemini-1.5-pro` — more powerful, higher quality responses
+> - `gemini-1.5-flash` — alternative fast model
 
-Make sure Ollama is running and the model is loaded:
-
-```bash
-# Start Ollama service (if not already running)
-ollama serve
-
-# In another terminal, pull the model (first time only)
-ollama pull gemma4:26b
-
-# Verify it's available
-ollama list
-```
-
-### Step 4 — (Optional) Set Up Google Calendar
+### Step 3 — (Optional) Set Up Google Calendar
 
 If you want calendar/reminder features:
 
@@ -198,7 +191,7 @@ python3 setup_google_calendar.py
 # This opens a browser for OAuth — authorize and token.json is saved
 ```
 
-### Step 5 — Start the Backend
+### Step 4 — Start the Backend
 
 ```bash
 uvicorn server:app --reload --host 0.0.0.0 --port 8000
@@ -211,7 +204,7 @@ INFO:     Uvicorn running on http://0.0.0.0:8000
 INFO:     Started reloader process
 ```
 
-### Step 6 — Start the Frontend
+### Step 5 — Start the Frontend
 
 Open a **new terminal**:
 
@@ -231,7 +224,7 @@ You should see:
 
 Open **http://localhost:3000** in your browser to see the voice assistant dashboard with the animated orb.
 
-### Step 7 — Start the Voice Client
+### Step 6 — Start the Voice Client
 
 Open another **new terminal**:
 
@@ -274,7 +267,7 @@ Say **"Hi there"**, **"Hey there"**, or **"Hi Dev"** to activate the assistant. 
 | *"What's on my calendar today?"* | Lists today's events |
 | *"Add a note: buy milk and eggs"* | Saves a note locally |
 | *"What are my notes?"* | Reads back recent notes |
-| *"Who is the PM of India?"* | Answers using LLM knowledge |
+| *"Who is the PM of India?"* | Answers using Gemini's knowledge |
 | *"Thank you"* | Responds with a friendly reply |
 
 ---
@@ -287,15 +280,15 @@ Say **"Hi there"**, **"Hey there"**, or **"Hi Dev"** to activate the assistant. 
 3. 📡 Audio is sent to POST /voice on the backend
 4. 🗣️ Sarvam AI transcribes audio → text
 5. 🔍 Wake word detection ("Hi there" / "Hey Dev")
-6. 🧠 Gemma 4 (via Ollama) classifies intent → JSON
+6. 🧠 Google Gemini classifies intent → JSON
 7. ⚡ Action router executes the command:
    - Smart plug → Tuya local API
    - Music → yt-dlp download + afplay
    - Calendar → Google Calendar API
    - Notes → Local JSON file
-   - Search → DuckDuckGo + Gemma summarization
+   - Search → DuckDuckGo + Gemini summarization
    - Weather → wttr.in API
-   - Chat → Gemma generates reply
+   - Chat → Gemini generates reply
 8. 🔈 Sarvam AI converts response text → speech audio
 9. 📨 Audio WAV sent back to voice client
 10. 🔊 Voice client plays audio via macOS afplay
@@ -306,16 +299,15 @@ Say **"Hi there"**, **"Hey there"**, or **"Hi Dev"** to activate the assistant. 
 
 ## 🖥️ Running Summary
 
-You need **3–4 terminals** running simultaneously:
+You need **3 terminals** running simultaneously:
 
 | Terminal | Command | Port |
 |---|---|---|
-| **1. Ollama** | `ollama serve` | `:11434` |
-| **2. Backend** | `uvicorn server:app --reload --host 0.0.0.0 --port 8000` | `:8000` |
-| **3. Frontend** | `cd frontend && npm run dev` | `:3000` |
-| **4. Voice Client** | `python3 voice_client.py` | — |
+| **1. Backend** | `uvicorn server:app --reload --host 0.0.0.0 --port 8000` | `:8000` |
+| **2. Frontend** | `cd frontend && npm run dev` | `:3000` |
+| **3. Voice Client** | `python3 voice_client.py` | — |
 
-> Ollama may already be running as a background service — check with `ollama list`.
+> No Ollama/local model server needed — Gemini runs in the cloud! 🚀
 
 ---
 
@@ -323,7 +315,7 @@ You need **3–4 terminals** running simultaneously:
 
 | Component | Technology |
 |---|---|
-| **LLM** | Gemma 4 26B via Ollama (local, private) |
+| **LLM** | Google Gemini API (`gemini-2.0-flash`) — cloud, no GPU required |
 | **Speech-to-Text** | Sarvam AI (saarika:v2.5) |
 | **Text-to-Speech** | Sarvam AI (bulbul:v2) |
 | **Backend** | Python, FastAPI, Uvicorn |
@@ -343,8 +335,9 @@ You need **3–4 terminals** running simultaneously:
 |---|---|
 | `python: command not found` | Use `python3` instead — macOS doesn't alias `python` by default |
 | Microphone not working | Grant permission: **System Settings → Privacy → Microphone** |
-| Ollama connection refused | Run `ollama serve` or check if it's running with `ollama list` |
-| Slow LLM responses | Gemma 4 26B is large (~17GB). Use `gemma3:4b` for faster inference by editing `.env` |
+| `GEMINI_API_KEY` not set | Add your key to `.env` — get one free at [aistudio.google.com](https://aistudio.google.com/app/apikey) |
+| Gemini quota exceeded | `gemini-2.0-flash` has a generous free tier; check [quotas](https://ai.google.dev/pricing) |
+| `google-generativeai` not found | Run `pip3 install google-generativeai` |
 | yt-dlp not found | Install with `brew install yt-dlp` |
 | Google Calendar errors | Run `python3 setup_google_calendar.py` to re-authorize |
 | Tuya device unreachable | Ensure the device is on the same LAN and the local key is correct |

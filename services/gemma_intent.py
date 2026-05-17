@@ -1,30 +1,29 @@
 import json
 import re
-import httpx
 from datetime import datetime
-from config import DEVICES
+from config import DEVICES, GEMINI_API_KEY, GEMINI_MODEL
+import google.generativeai as genai
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-OLLAMA_MODEL = "gemma4:26b"
+# ── Gemini client setup ────────────────────────────────────────────────────────
+
+genai.configure(api_key=GEMINI_API_KEY)
+_gemini_model = genai.GenerativeModel(GEMINI_MODEL)
 
 
-def _ollama_chat(messages: list[dict], temperature: float = 0, max_tokens: int = 200) -> str:
-    """Call Ollama's OpenAI-compatible chat endpoint."""
-    resp = httpx.post(
-        f"{OLLAMA_BASE_URL}/api/chat",
-        json={
-            "model": OLLAMA_MODEL,
-            "messages": messages,
-            "stream": False,
-            "options": {
-                "temperature": temperature,
-                "num_predict": max_tokens,
-            },
-        },
-        timeout=60.0,
+def _gemini_chat(system_prompt: str, user_message: str,
+                 temperature: float = 0.0, max_tokens: int = 200) -> str:
+    """Send a system + user message to Gemini and return the text response."""
+    generation_config = genai.types.GenerationConfig(
+        temperature=temperature,
+        max_output_tokens=max_tokens,
     )
-    resp.raise_for_status()
-    return resp.json()["message"]["content"].strip()
+    # Gemini treats the first turn as the combined context
+    full_prompt = f"{system_prompt}\n\nUser: {user_message}"
+    response = _gemini_model.generate_content(
+        full_prompt,
+        generation_config=generation_config,
+    )
+    return response.text.strip()
 
 
 def _system_prompt() -> str:
@@ -109,16 +108,14 @@ Examples:
 
 
 def parse_intent(transcript: str) -> dict:
-    raw = _ollama_chat(
-        messages=[
-            {"role": "system",  "content": _system_prompt()},
-            {"role": "user",    "content": transcript},
-        ],
+    raw = _gemini_chat(
+        system_prompt=_system_prompt(),
+        user_message=transcript,
         temperature=0,
         max_tokens=200,
     )
-    # Strip markdown code fences if the LLM wraps the JSON
+    # Strip markdown code fences if Gemini wraps the JSON
     if raw.startswith("```"):
         raw = re.sub(r"^```[a-z]*\n?", "", raw)
         raw = re.sub(r"\n?```$", "", raw)
-    return json.loads(raw)
+    return json.loads(raw.strip())
