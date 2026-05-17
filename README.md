@@ -6,7 +6,7 @@ A voice-controlled smart home assistant that runs on macOS. Speak commands in **
 
 ## 🎬 Demo
 
-https://github.com/basudevghadai1999/ai_voice_assistant/blob/main/voice_video.mp4
+https://github.com/basudevghadai1999/devvoice/blob/main/voice_video.mp4
 
 ---
 
